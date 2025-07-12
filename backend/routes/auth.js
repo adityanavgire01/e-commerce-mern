@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -203,13 +204,145 @@ router.post('/logout', (req, res) => {
 
 // @route   GET /api/auth/me
 // @desc    Get current user profile
-// @access  Private (we'll add middleware later)
-router.get('/me', async (req, res) => {
-    // This route will be protected later with authentication middleware
-    res.status(200).json({
-        success: true,
-        message: 'Profile route - will be protected later'
-    });
+// @access  Private
+router.get('/me', authenticateToken, async (req, res) => {
+    try {
+        // req.user is available because of authenticateToken middleware
+        res.status(200).json({
+            success: true,
+            message: 'User profile retrieved successfully',
+            user: req.user.getPublicProfile()
+        });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching profile'
+        });
+    }
+});
+
+// @route   PUT /api/auth/me
+// @desc    Update current user profile
+// @access  Private
+router.put('/me', [
+    authenticateToken,
+    // Validation for update fields
+    body('firstName')
+        .optional()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('First name must be between 2 and 50 characters')
+        .matches(/^[a-zA-Z\s]+$/)
+        .withMessage('First name can only contain letters and spaces'),
+    
+    body('lastName')
+        .optional()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('Last name must be between 2 and 50 characters')
+        .matches(/^[a-zA-Z\s]+$/)
+        .withMessage('Last name can only contain letters and spaces'),
+    
+    body('username')
+        .optional()
+        .isLength({ min: 3, max: 30 })
+        .withMessage('Username must be between 3 and 30 characters')
+        .matches(/^[a-zA-Z0-9_]+$/)
+        .withMessage('Username can only contain letters, numbers, and underscores')
+], async (req, res) => {
+    try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+
+        const { firstName, lastName, username } = req.body;
+        const userId = req.user._id;
+
+        // Check if username is already taken (if username is being updated)
+        if (username && username !== req.user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Username is already taken'
+                });
+            }
+        }
+
+        // Update user fields
+        const updateFields = {};
+        if (firstName) updateFields.firstName = firstName;
+        if (lastName) updateFields.lastName = lastName;
+        if (username) updateFields.username = username;
+
+        // Update user in database
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateFields,
+            { new: true, runValidators: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully',
+            user: updatedUser.getPublicProfile()
+        });
+
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while updating profile'
+        });
+    }
+});
+
+// @route   GET /api/auth/admin/users
+// @desc    Get all users (Admin only)
+// @access  Private + Admin
+router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        // Get all users with pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const users = await User.find({})
+            .select('-password')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const totalUsers = await User.countDocuments();
+        const totalPages = Math.ceil(totalUsers / limit);
+
+        res.status(200).json({
+            success: true,
+            message: 'Users retrieved successfully',
+            data: {
+                users,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalUsers,
+                    hasNextPage: page < totalPages,
+                    hasPrevPage: page > 1
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Get users error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching users'
+        });
+    }
 });
 
 module.exports = router;
