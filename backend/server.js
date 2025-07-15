@@ -43,10 +43,15 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/categories', require('./routes/categories'));
+app.use('/api/products', require('./routes/products'));
 
 // Start server
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
     console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
+    console.log(`📂 Category endpoints: http://localhost:${PORT}/api/categories`);
+    console.log(`🛍️ Product endpoints: http://localhost:${PORT}/api/products`);
 });
+
