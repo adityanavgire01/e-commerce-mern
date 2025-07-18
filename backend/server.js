@@ -46,6 +46,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/cart', require('./routes/cart'));
+app.use('/api/orders', require('./routes/order'));
 
 // Start server
 app.listen(PORT, () => {
@@ -55,5 +56,6 @@ app.listen(PORT, () => {
     console.log(`📂 Category endpoints: http://localhost:${PORT}/api/categories`);
     console.log(`🛍️ Product endpoints: http://localhost:${PORT}/api/products`);
     console.log(`🛒 Cart endpoints: http://localhost:${PORT}/api/cart`);
+    console.log(`📦 Order endpoints: http://localhost:${PORT}/api/orders`);
 });
 
