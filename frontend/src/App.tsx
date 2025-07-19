@@ -1,10 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Products from './pages/Products';
+import Cart from './pages/Cart';
+import ProductDetail from './pages/ProductDetail';
 
 // Home component for unauthenticated users
 const Home: React.FC = () => {
@@ -23,6 +27,12 @@ const Home: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <h1 className="text-2xl font-bold text-gray-900">E-Commerce MERN</h1>
             <div className="space-x-4">
+              <a
+                href="/products"
+                className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Products
+              </a>
               <a
                 href="/login"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -57,6 +67,12 @@ const Home: React.FC = () => {
               Sign in to access your dashboard and start shopping!
             </p>
             <div className="space-y-3">
+              <a
+                href="/products"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 block"
+              >
+                Browse Products
+              </a>
               <a
                 href="/register"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-200 block"
@@ -96,11 +112,18 @@ const Home: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
+      <CartProvider>
+        <Router>
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route 
+            path="/cart" 
+            element={<Cart />}
+          />
           <Route 
             path="/dashboard" 
             element={
@@ -112,7 +135,8 @@ function App() {
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+        </Router>
+      </CartProvider>
     </AuthProvider>
   );
 }
