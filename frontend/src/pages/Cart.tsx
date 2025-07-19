@@ -309,9 +309,12 @@ const Cart: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors">
+                  <Link
+                    to="/checkout"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-md transition-colors text-center block"
+                  >
                     Proceed to Checkout
-                  </button>
+                  </Link>
                   <Link
                     to="/products"
                     className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-4 rounded-md transition-colors text-center block"

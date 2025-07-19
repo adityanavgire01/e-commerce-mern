@@ -169,4 +169,75 @@ export const cartApi = {
   }
 };
 
+// Order interfaces
+export interface ShippingAddress {
+  fullName: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface OrderItem {
+  product: string;
+  name: string;
+  price: number;
+  quantity: number;
+  total: number;
+}
+
+export interface Order {
+  _id: string;
+  orderNumber: string;
+  customer: string;
+  items: OrderItem[];
+  totalItems: number;
+  totalAmount: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: ShippingAddress;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CheckoutData {
+  shippingAddress: ShippingAddress;
+  notes?: string;
+}
+
+export const orderApi = {
+  // Checkout - Create order from cart
+  checkout: async (checkoutData: CheckoutData): Promise<Order> => {
+    try {
+      const response = await api.post<ApiResponse<Order>>('/api/orders/checkout', checkoutData);
+      return response.data.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || 'Failed to process checkout');
+    }
+  },
+
+  // Get user's orders
+  getUserOrders: async (): Promise<Order[]> => {
+    try {
+      const response = await api.get<ApiResponse<Order[]>>('/api/orders');
+      return response.data.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || 'Failed to fetch orders');
+    }
+  },
+
+  // Get single order
+  getOrderById: async (orderId: string): Promise<Order> => {
+    try {
+      const response = await api.get<ApiResponse<Order>>(`/api/orders/${orderId}`);
+      return response.data.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || 'Failed to fetch order');
+    }
+  }
+};
+
 export default api; 

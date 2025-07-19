@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
+import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
 
 // Home component for unauthenticated users
 const Home: React.FC = () => {
@@ -124,6 +126,8 @@ function App() {
             path="/cart" 
             element={<Cart />}
           />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
           <Route 
             path="/dashboard" 
             element={
