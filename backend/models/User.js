@@ -64,7 +64,25 @@ const userSchema = new mongoose.Schema({
     avatar: {
         type: String,
         default: null
-    }
+    },
+
+    // Shopping Cart
+    cart: [{
+        product: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true
+        },
+        quantity: {
+            type: Number,
+            required: true,
+            min: [1, 'Quantity must be at least 1']
+        },
+        addedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }]
 }, {
     // Add timestamps (createdAt, updatedAt)
     timestamps: true
@@ -101,6 +119,55 @@ userSchema.methods.getPublicProfile = function() {
 // Static method: Find user by email
 userSchema.statics.findByEmail = function(email) {
     return this.findOne({ email: email.toLowerCase() });
+};
+
+// Cart Methods
+// Add item to cart
+userSchema.methods.addToCart = function(productId, quantity = 1) {
+    const existingItem = this.cart.find(item => item.product.toString() === productId.toString());
+    
+    if (existingItem) {
+        existingItem.quantity += quantity;
+    } else {
+        this.cart.push({
+            product: productId,
+            quantity: quantity
+        });
+    }
+    
+    return this.save();
+};
+
+// Remove item from cart
+userSchema.methods.removeFromCart = function(productId) {
+    this.cart = this.cart.filter(item => item.product.toString() !== productId.toString());
+    return this.save();
+};
+
+// Update item quantity in cart
+userSchema.methods.updateCartQuantity = function(productId, quantity) {
+    const item = this.cart.find(item => item.product.toString() === productId.toString());
+    
+    if (item) {
+        if (quantity <= 0) {
+            return this.removeFromCart(productId);
+        }
+        item.quantity = quantity;
+        return this.save();
+    }
+    
+    throw new Error('Item not found in cart');
+};
+
+// Clear entire cart
+userSchema.methods.clearCart = function() {
+    this.cart = [];
+    return this.save();
+};
+
+// Get cart total (items count)
+userSchema.methods.getCartItemCount = function() {
+    return this.cart.reduce((total, item) => total + item.quantity, 0);
 };
 
 module.exports = mongoose.model('User', userSchema);
