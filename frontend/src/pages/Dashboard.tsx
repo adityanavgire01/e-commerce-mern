@@ -1,8 +1,11 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useAdmin } from '../contexts/AdminContext';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const { isAdmin } = useAdmin();
 
   const handleLogout = () => {
     logout();
@@ -59,7 +62,27 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 gap-6 ${isAdmin ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
+          {/* Admin Panel Card - Only visible to admins */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="bg-gradient-to-r from-yellow-400 to-orange-500 p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer text-white"
+            >
+              <div className="flex items-center mb-4">
+                <div className="p-2 bg-white bg-opacity-20 rounded-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-white ml-3">Admin Panel</h3>
+              </div>
+              <p className="text-white text-opacity-90 mb-4">Manage users, products, and orders</p>
+              <span className="text-white font-medium text-sm">
+                Open Admin Dashboard →
+              </span>
+            </Link>
+          )}
           <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer">
             <div className="flex items-center mb-4">
               <div className="p-2 bg-blue-100 rounded-lg">

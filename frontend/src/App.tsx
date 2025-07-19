@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { AdminProvider } from './contexts/AdminContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -9,6 +10,13 @@ import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import ProductDetail from './pages/ProductDetail';
+import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminProducts from './pages/AdminProducts';
+import AdminOrders from './pages/AdminOrders';
+import AdminUsers from './pages/AdminUsers';
+import AdminCategories from './pages/AdminCategories';
 
 // Home component for unauthenticated users
 const Home: React.FC = () => {
@@ -112,9 +120,10 @@ const Home: React.FC = () => {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router>
-          <Routes>
+      <AdminProvider>
+        <CartProvider>
+          <Router>
+            <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -124,6 +133,15 @@ function App() {
             path="/cart" 
             element={<Cart />}
           />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/products/new" element={<AdminProducts />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
+          <Route path="/admin/categories/new" element={<AdminCategories />} />
+          <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
           <Route 
             path="/dashboard" 
             element={
@@ -135,8 +153,9 @@ function App() {
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        </Router>
-      </CartProvider>
+          </Router>
+        </CartProvider>
+      </AdminProvider>
     </AuthProvider>
   );
 }
