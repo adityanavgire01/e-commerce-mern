@@ -83,6 +83,14 @@ router.post('/register', [
         // Save user to database
         await user.save();
 
+        // Check JWT environment variables
+        if (!process.env.JWT_SECRET) {
+            throw new Error('JWT_SECRET environment variable is not set');
+        }
+        if (!process.env.JWT_EXPIRE) {
+            throw new Error('JWT_EXPIRE environment variable is not set');
+        }
+
         // Generate JWT token
         const token = jwt.sign(
             { 
@@ -103,6 +111,16 @@ router.post('/register', [
 
     } catch (error) {
         console.error('Registration error:', error);
+        
+        // Check if it's a validation error
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: Object.values(error.errors).map(err => err.message)
+            });
+        }
+        
         res.status(500).json({
             success: false,
             message: 'Server error during registration'
