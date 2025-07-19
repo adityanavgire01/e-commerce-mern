@@ -363,4 +363,186 @@ router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => 
     }
 });
 
+// @route   PUT /api/auth/admin/users/:id/status
+// @desc    Activate/Deactivate user account (Admin only)
+// @access  Private + Admin
+router.put('/admin/users/:id/status', [
+    authenticateToken,
+    requireAdmin,
+    body('isActive')
+        .isBoolean()
+        .withMessage('isActive must be a boolean value')
+], async (req, res) => {
+    try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+
+        const { id } = req.params;
+        const { isActive } = req.body;
+
+        // Prevent admin from deactivating themselves
+        if (id === req.user._id.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: 'You cannot change your own account status'
+            });
+        }
+
+        // Find and update user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        user.isActive = isActive;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: `User account ${isActive ? 'activated' : 'deactivated'} successfully`,
+            data: user.getPublicProfile()
+        });
+
+    } catch (error) {
+        console.error('Update user status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while updating user status'
+        });
+    }
+});
+
+// @route   PUT /api/auth/admin/users/:id/reset-password
+// @desc    Reset user password (Admin only)
+// @access  Private + Admin
+router.put('/admin/users/:id/reset-password', [
+    authenticateToken,
+    requireAdmin,
+    body('newPassword')
+        .isLength({ min: 6 })
+        .withMessage('Password must be at least 6 characters')
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
+], async (req, res) => {
+    try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+
+        const { id } = req.params;
+        const { newPassword } = req.body;
+
+        // Prevent admin from resetting their own password this way
+        if (id === req.user._id.toString()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Use the profile update endpoint to change your own password'
+            });
+        }
+
+        // Find user
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Update password (will be hashed automatically by pre-save middleware)
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'User password reset successfully'
+        });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while resetting password'
+        });
+    }
+});
+
+// @route   GET /api/auth/admin/users/:id/orders
+// @desc    Get user's order history (Admin only)  
+// @access  Private + Admin
+router.get('/admin/users/:id/orders', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        // Check if user exists
+        const user = await User.findById(id);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Get user's orders
+        const Order = require('../models/Order');
+        const orders = await Order.find({ customer: id })
+            .populate('items.product', 'name image price')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const totalOrders = await Order.countDocuments({ customer: id });
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        // Calculate total spent
+        const totalSpent = await Order.aggregate([
+            { $match: { customer: user._id } },
+            { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            message: 'User orders retrieved successfully',
+            data: {
+                user: user.getPublicProfile(),
+                orders,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalOrders,
+                    hasNextPage: page < totalPages,
+                    hasPrevPage: page > 1
+                },
+                totalSpent: totalSpent.length > 0 ? totalSpent[0].total : 0
+            }
+        });
+
+    } catch (error) {
+        console.error('Get user orders error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching user orders'
+        });
+    }
+});
+
 module.exports = router;

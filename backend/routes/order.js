@@ -260,4 +260,97 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// @route   GET /api/orders/admin/all
+// @desc    Get all orders (Admin only)
+// @access  Private + Admin
+router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 50;
+        const skip = (page - 1) * limit;
+
+        const orders = await Order.find({})
+            .populate('customer', 'firstName lastName email')
+            .populate('items.product', 'name image')
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 });
+
+        const totalOrders = await Order.countDocuments();
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.status(200).json({
+            success: true,
+            count: orders.length,
+            data: orders,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalOrders,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        });
+
+    } catch (error) {
+        console.error('Get all orders error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while fetching orders'
+        });
+    }
+});
+
+// @route   PUT /api/orders/:id/status
+// @desc    Update order status (Admin only)
+// @access  Private + Admin
+router.put('/:id/status', [
+    authenticateToken,
+    requireAdmin,
+    body('status')
+        .isIn(['pending', 'processing', 'shipped', 'delivered', 'cancelled'])
+        .withMessage('Invalid status. Must be one of: pending, processing, shipped, delivered, cancelled')
+], async (req, res) => {
+    try {
+        // Check for validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array()
+            });
+        }
+
+        const { status } = req.body;
+        
+        const order = await Order.findById(req.params.id)
+            .populate('customer', 'firstName lastName email')
+            .populate('items.product', 'name image');
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        // Update order status
+        await order.updateStatus(status);
+
+        res.status(200).json({
+            success: true,
+            message: `Order status updated to ${status}`,
+            data: order
+        });
+
+    } catch (error) {
+        console.error('Update order status error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while updating order status'
+        });
+    }
+});
+
 module.exports = router;
