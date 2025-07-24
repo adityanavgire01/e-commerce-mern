@@ -8,7 +8,7 @@
   h1, h2, h3, h4, h5, h6 {
     font-weight: 600;
     letter-spacing: -0.025em;
-  }
+}
 }
 
 @layer utilities {
@@ -17,14 +17,14 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
-  }
-  
+}
+
   .line-clamp-2 {
     overflow: hidden;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-  }
+}
   
   .line-clamp-3 {
     overflow: hidden;

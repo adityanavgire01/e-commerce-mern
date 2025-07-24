@@ -40,7 +40,7 @@ const Home: React.FC = () => {
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Products
-              </a>
+        </a>
               <a
                 href="/login"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -52,8 +52,8 @@ const Home: React.FC = () => {
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
               >
                 Register
-              </a>
-            </div>
+        </a>
+      </div>
           </div>
         </div>
       </header>
@@ -113,7 +113,7 @@ const Home: React.FC = () => {
           </div>
         </div>
       </main>
-    </div>
+      </div>
   );
 };
 

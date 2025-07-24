@@ -16,6 +16,7 @@ const AdminUsers: React.FC = () => {
   const [showUserDetail, setShowUserDetail] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [showUserOrders, setShowUserOrders] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [filterRole, setFilterRole] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,6 +93,33 @@ const AdminUsers: React.FC = () => {
       setError(errorMessage);
     } finally {
       setIsUpdatingStatus(null);
+    }
+  };
+
+  const openDeleteConfirmation = (user: AdminUser) => {
+    if (user._id === currentUser?.id) {
+      setError('You cannot delete your own account');
+      return;
+    }
+    if (user.isActive) {
+      setError('User must be deactivated before deletion');
+      return;
+    }
+    setSelectedUser(user);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await adminApi.deleteUser(selectedUser._id);
+      setUsers(prev => prev.filter(u => u._id !== selectedUser._id));
+      setSuccessMessage(`User ${selectedUser.username} has been permanently deleted`);
+      setShowDeleteConfirm(false);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete user';
+      setError(errorMessage);
     }
   };
 
@@ -475,18 +503,33 @@ const AdminUsers: React.FC = () => {
                         {/* Admin Actions */}
                         {user._id !== currentUser?.id && (
                           <div className="flex flex-col space-y-2">
-                            {/* Status Toggle */}
-                            <button
-                              onClick={() => handleStatusToggle(user)}
-                              disabled={isUpdatingStatus === user._id}
-                              className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-                                user.isActive
-                                  ? 'bg-red-100 hover:bg-red-200 text-red-800'
-                                  : 'bg-green-100 hover:bg-green-200 text-green-800'
-                              } disabled:opacity-50`}
-                            >
-                              {isUpdatingStatus === user._id ? '...' : user.isActive ? 'Deactivate' : 'Activate'}
-                            </button>
+                            {/* Status Toggle and Delete (for inactive users) */}
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => handleStatusToggle(user)}
+                                disabled={isUpdatingStatus === user._id}
+                                className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+                                  user.isActive
+                                    ? 'bg-red-100 hover:bg-red-200 text-red-800'
+                                    : 'bg-green-100 hover:bg-green-200 text-green-800'
+                                } disabled:opacity-50`}
+                              >
+                                {isUpdatingStatus === user._id ? '...' : user.isActive ? 'Deactivate' : 'Activate'}
+                              </button>
+                              
+                              {/* Delete Button - Only shown for inactive users */}
+                              {!user.isActive && (
+                                <button
+                                  onClick={() => openDeleteConfirmation(user)}
+                                  className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                                  title="Delete user permanently"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
                             
                             {/* Reset Password */}
                             <button
@@ -838,6 +881,84 @@ const AdminUsers: React.FC = () => {
                 className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md font-medium transition-colors"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {showDeleteConfirm && selectedUser && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-red-100 rounded-full">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Delete User Account
+                </h3>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4">
+              <div className="mb-4">
+                <p className="text-gray-700 mb-2">
+                  You are about to permanently delete the user account for:
+                </p>
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="font-medium text-gray-900">
+                    {selectedUser.firstName} {selectedUser.lastName}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Username: {selectedUser.username}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Email: {selectedUser.email}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h4 className="text-sm font-medium text-red-800">
+                      ⚠️ Warning: This action cannot be undone!
+                    </h4>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>This will permanently delete:</p>
+                      <ul className="list-disc list-inside mt-1 space-y-1">
+                        <li>The user's account and profile information</li>
+                        <li>All associated user data</li>
+                        <li>Order history and related records</li>
+                        <li>Any other data linked to this user</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Delete Permanently
               </button>
             </div>
           </div>

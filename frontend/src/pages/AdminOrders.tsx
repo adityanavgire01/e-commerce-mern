@@ -125,11 +125,11 @@ const AdminOrders: React.FC = () => {
   const filteredOrders = orders.filter(order => {
     const matchesStatus = !filterStatus || order.status === filterStatus;
     
-    // Get customer info for search
-    const customerName = typeof order.customer === 'object' 
+    // Get customer info for search - handle deleted users (null customer)
+    const customerName = (typeof order.customer === 'object' && order.customer !== null)
       ? `${order.customer.firstName} ${order.customer.lastName}`
       : order.shippingAddress.fullName;
-    const customerEmail = typeof order.customer === 'object' 
+    const customerEmail = (typeof order.customer === 'object' && order.customer !== null)
       ? order.customer.email
       : '';
     
@@ -332,12 +332,12 @@ const AdminOrders: React.FC = () => {
                           <div>
                             <p className="font-medium text-gray-900">Customer</p>
                             <p>
-                              {typeof order.customer === 'object' 
+                              {(typeof order.customer === 'object' && order.customer !== null)
                                 ? `${order.customer.firstName} ${order.customer.lastName}`
                                 : order.shippingAddress.fullName}
                             </p>
                             <p>
-                              {typeof order.customer === 'object' 
+                              {(typeof order.customer === 'object' && order.customer !== null)
                                 ? order.customer.email
                                 : 'N/A'}
                             </p>
@@ -444,12 +444,12 @@ const AdminOrders: React.FC = () => {
                     <h4 className="font-medium text-gray-900 mb-3">Customer Information</h4>
                     <div className="space-y-2 text-sm">
                       <p><span className="font-medium">Name:</span> {
-                        typeof selectedOrder.customer === 'object' 
+                        (typeof selectedOrder.customer === 'object' && selectedOrder.customer !== null)
                           ? `${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName}`
                           : selectedOrder.shippingAddress.fullName
                       }</p>
                       <p><span className="font-medium">Email:</span> {
-                        typeof selectedOrder.customer === 'object' 
+                        (typeof selectedOrder.customer === 'object' && selectedOrder.customer !== null)
                           ? selectedOrder.customer.email
                           : 'N/A'
                       }</p>

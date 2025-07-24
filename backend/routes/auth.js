@@ -519,8 +519,8 @@ router.get('/admin/users/:id/orders', authenticateToken, requireAdmin, async (re
             { $group: { _id: null, total: { $sum: '$totalAmount' } } }
         ]);
 
-        res.status(200).json({
-            success: true,
+    res.status(200).json({
+        success: true,
             message: 'User orders retrieved successfully',
             data: {
                 user: user.getPublicProfile(),
@@ -541,6 +541,52 @@ router.get('/admin/users/:id/orders', authenticateToken, requireAdmin, async (re
         res.status(500).json({
             success: false,
             message: 'Server error while fetching user orders'
+        });
+    }
+});
+
+// DELETE /api/auth/admin/users/:userId - Delete user permanently (Admin only)
+router.delete('/admin/users/:userId', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Check if user exists
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Prevent self-deletion
+        if (userId === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'You cannot delete your own account'
+            });
+        }
+
+        // Check if user is inactive (safety check)
+        if (user.isActive) {
+            return res.status(400).json({
+                success: false,
+                message: 'User must be deactivated before deletion'
+            });
+        }
+
+        // Delete user and all associated data
+        await User.findByIdAndDelete(userId);
+
+        res.json({
+            success: true,
+            message: 'User deleted successfully'
+        });
+    } catch (error) {
+        console.error('Delete user error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error while deleting user'
         });
     }
 });

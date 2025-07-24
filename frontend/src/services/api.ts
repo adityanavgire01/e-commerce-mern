@@ -411,6 +411,16 @@ export const adminApi = {
       const axiosError = error as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || 'Failed to fetch user orders');
     }
+  },
+
+  // Delete user permanently (admin only)
+  deleteUser: async (userId: string): Promise<void> => {
+    try {
+      await api.delete(`/api/auth/admin/users/${userId}`);
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || 'Failed to delete user');
+    }
   }
 };
 

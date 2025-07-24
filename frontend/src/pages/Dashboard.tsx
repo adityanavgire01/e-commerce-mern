@@ -83,7 +83,10 @@ const Dashboard: React.FC = () => {
               </span>
             </Link>
           )}
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer">
+          <Link
+            to="/products"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer block"
+          >
             <div className="flex items-center mb-4">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,12 +96,15 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-800 ml-3">Products</h3>
             </div>
             <p className="text-gray-600 mb-4">Browse and manage products</p>
-            <button className="text-blue-600 hover:text-blue-700 font-medium text-sm">
+            <span className="text-blue-600 hover:text-blue-700 font-medium text-sm">
               View Products →
-            </button>
-          </div>
+            </span>
+          </Link>
 
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer">
+          <Link
+            to="/cart"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer block"
+          >
             <div className="flex items-center mb-4">
               <div className="p-2 bg-green-100 rounded-lg">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,12 +114,15 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-800 ml-3">Shopping Cart</h3>
             </div>
             <p className="text-gray-600 mb-4">Manage your shopping cart</p>
-            <button className="text-green-600 hover:text-green-700 font-medium text-sm">
+            <span className="text-green-600 hover:text-green-700 font-medium text-sm">
               View Cart →
-            </button>
-          </div>
+            </span>
+          </Link>
 
-          <div className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer">
+          <Link
+            to="/orders"
+            className="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer block"
+          >
             <div className="flex items-center mb-4">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,10 +132,10 @@ const Dashboard: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-800 ml-3">Orders</h3>
             </div>
             <p className="text-gray-600 mb-4">Track your order history</p>
-            <button className="text-purple-600 hover:text-purple-700 font-medium text-sm">
+            <span className="text-purple-600 hover:text-purple-700 font-medium text-sm">
               View Orders →
-            </button>
-          </div>
+            </span>
+          </Link>
         </div>
 
         {/* API Status Section */}
